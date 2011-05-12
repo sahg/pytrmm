@@ -9,4 +9,4 @@ except ImportError:
     from __version import version as __version__
     from __version import git_revision as __git_revision__
 
-import 3b4xrt
+import trmm3b4xrt
