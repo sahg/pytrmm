@@ -1,4 +1,4 @@
-__all__ = ['TRMM3B42RTFile', 'read3B42RT']
+__all__ = ['TRMM3B42RTFile']
 
 import sys
 from gzip import GzipFile
@@ -6,32 +6,92 @@ from gzip import GzipFile
 import numpy as np
 from numpy import ma
 
-def read3B42RT(fname):
-    precip_scale_factor = 100.0
-    rows = 480
-    cols = 1440
+class TRMM3B4XRTFile:
+    """Base Class for read operations on TRMM 3B4XRT files.
 
-    fp = open(fname, 'rb')
-    data_string = fp.read()
-    fp.close()
+    This class should not be used directly, use one of the derived
+    classes instead.
 
-    precip = np.fromstring(data_string[2880:1385280], np.int16)
-    precip = precip.byteswap()
-    precip = np.asarray(precip, np.float32)
-    precip /= precip_scale_factor
-    precip = ma.masked_less_equal(precip, 0)
-    precip = precip.reshape(rows, cols)
+    """
+    def __init__(self, filename):
+        self.filename = filename
+        self._header_offset = 2880
 
-    return precip
+        self._read_header()
 
-class TRMM3B42RTFile:
+        self._rows = int(self._hdr['number_of_latitude_bins'])
+        self._cols = int(self._hdr['number_of_longitude_bins'])
+
+    def _read_binary(self):
+        """Read file as a binary string.
+
+        """
+        if self.filename.split('.')[-1] == 'gz':
+            fp = GzipFile(self.filename)
+        else: # assume decompressed binary file
+            fp = open(self.filename, 'rb')
+        data_string = fp.read()
+        fp.close()
+
+        return data_string
+
+    def _read_header(self):
+        """Read the file header.
+
+        """
+        data_string = self._read_binary()
+
+        self._hdr = {}
+        for item in data_string[:self._header_offset].split():
+            key, val = item.split('=')
+            self._hdr[key] = val
+
+    def _read_field(self, field_num):
+        """Read a data field from the file.
+
+        """
+        data_string = self._read_binary()
+
+        if field_num == 0:
+            strt_offset = self._header_offset
+        else:
+            raise NotImplementedError(
+                'Reading field number %d not implemented yet' % field_num)
+
+        var_type = self._hdr['variable_type'].split(',')[field_num]
+
+        if var_type == 'signed_integer1':
+            dtype = np.int8
+            end_offset = strt_offset + self._rows*self._cols
+        elif var_type == 'signed_integer2':
+            dtype = np.int16
+            end_offset = strt_offset + 2*self._rows*self._cols
+        else:
+            raise IOError, 'Badly formed header in %s' % self.filename
+
+        field = np.fromstring(data_string[strt_offset:end_offset], np.int16)
+        if sys.byteorder == 'little':
+            field = field.byteswap()
+
+        field = field.reshape(self._rows, self._cols)
+
+        return field
+
+    def header(self):
+        """Return a copy of the file header in a dictionary.
+
+        """
+        return dict(self._hdr)
+
+class TRMM3B42RTFile(TRMM3B4XRTFile):
     """Class for read operations on TRMM 3B42RT files.
 
     Example Usage:
 
-    >>> from dataflow.trmm import TRMM3B42RTFile
-    >>> current_file = TRMM3B42RTFile(file_name)
-    >>> precip = current_file.precip()
+    >>> from pytrmm import TRMM3B42RTFile
+    >>> trmm_file = TRMM3B42RTFile(file_name)
+    >>> print(trmm_file.header())
+    >>> precip = trmm_file.precip()
     >>> print 'Array dimensions:', precip.shape
     >>> print 'Data max:', precip.max()
     >>> print 'Data min:', precip.min()
@@ -39,16 +99,6 @@ class TRMM3B42RTFile:
     >>> print 'Data std-dev:', precip.std()
 
     """
-    def __init__(self, file_name):
-        self.fname = file_name
-        self.info = dict(cols=1440,
-                         rows=480,
-                         ll_lon=0.125,
-                         ll_lat=-59.875,
-                         dlon=0.25,
-                         dlat=0.25,
-                         grid_size=0.25)
-
     def precip(self, scaled=True, floats=True, masked=True):
         """Return the entire field of rainfall values.
 
@@ -56,120 +106,15 @@ class TRMM3B42RTFile:
 
         """
         precip_scale_factor = 100.0
-        rows = 480 # The file headers lie about number of rows
-        cols = 1440
 
-        if self.fname.split('.')[-1] == 'gz':
-            fp = GzipFile(self.fname)
-        else: # assume decompressed binary file
-            fp = open(self.fname, 'rb')
-        data_string = fp.read()
-        fp.close()
+        raw_field = self._read_field(0)
 
-        precip = np.fromstring(data_string[2880:1385280], np.int16)
-        if sys.byteorder == 'little':
-            precip = precip.byteswap()
+        if masked:
+            precip = np.ma.masked_equal(raw_field,
+                                        int(self._hdr['flag_value']))
         if floats:
-            precip = np.asarray(precip, np.float32)
+            precip = np.ma.asarray(precip, np.float32)
         if scaled:
             precip /= precip_scale_factor
-        if masked:
-            precip = ma.masked_less(precip, 0)
-        precip = precip.reshape(rows, cols)
 
         return precip
-
-    def header(self, scaled=True, floats=True, masked=True):
-        """Return the file header in a dictionary.
-
-        """
-        if self.fname.split('.')[-1] == 'gz':
-            fp = GzipFile(self.fname)
-        else: # assume decompressed binary file
-            fp = open(self.fname, 'rb')
-        data_string = fp.read()
-        fp.close()
-
-        hdr = {}
-        for item in data_string[:2880].split():
-            key, val = item.split('=')
-            hdr[key] = val
-
-        return hdr
-
-    def point_values(self, lats, lons):
-        """Get the rainfall value at one or more locations.
-
-        A simple nearest neighbour algorithm is used with the returned value
-        being the rainfall of the grid box containing the location(s).
-
-        """
-        ncols = self.info['cols']
-        nrows = self.info['rows']
-        lon0 = self.info['ll_lon']
-        lat0 = self.info['ll_lat']
-        dlon = self.info['dlon']
-        dlat = self.info['dlat']
-
-        row_indices, col_indices = find_indices(lats, lons, lat0, lon0,
-                                                dlat, dlon, nrows, ncols)
-
-        row_indices = np.asarray(row_indices)
-        col_indices = np.asarray(col_indices)
-
-        if row_indices.shape != () and col_indices.shape != ():# multiple points
-            rindices = row_indices[(row_indices != -999)
-                                   & (col_indices != -999)]
-            cindices = col_indices[(row_indices != -999)
-                                   & (col_indices != -999)]
-        else:# scalar
-            rindices = row_indices
-            cindices = col_indices
-
-        precip = self.precip()
-
-        result = precip[rindices, cindices]
-
-        return result
-
-    def clip_precip(self, min_lat, max_lat, min_lon, max_lon):
-        """Obtain a sub-region specified by a bounding box.
-
-        A 2D masked array is returned. Only pixels with centres
-        falling inside the bounding box are returned. If pixel centres
-        fall exactly on the boundaries, these pixels are also
-        included.
-
-        """
-        lon, lat = self._define_grid(min_lon, min_lat, max_lon, max_lat)
-
-        rows = np.unique(lat).size
-        cols = np.unique(lon).size
-
-        result = self.point_values(lat, lon).reshape((rows, cols))
-        
-        return result
-
-    def _define_grid(self, ll_lon, ll_lat, ur_lon, ur_lat):
-        """Extract a sub-set of the TRMM 3B42RT grid."""
-        cols = self.info['cols']
-        rows = self.info['rows']
-        x0 = self.info['ll_lon']
-        y0 = self.info['ll_lat']
-        cell_size = self.info['grid_size']
-
-        # define the grid (pixel centre's)
-        xt, yt = np.meshgrid(np.linspace(x0, x0 + (cols-1)*cell_size, num=cols),
-                             np.linspace(y0 + (rows-1)*cell_size, y0, num=rows))
-
-        xt = xt.flatten()
-        yt = yt.flatten()
-
-        # define points inside the specified domain
-        lon = xt[(xt >= ll_lon) & (xt <= ur_lon) &
-                  (yt >= ll_lat) & (yt <= ur_lat)]
-
-        lat = yt[(xt >= ll_lon) & (xt <= ur_lon) &
-                  (yt >= ll_lat) & (yt <= ur_lat)]
-
-        return lon, lat
