@@ -69,7 +69,7 @@ class TRMM3B4XRTFile:
         else:
             raise IOError, 'Badly formed header in %s' % self.filename
 
-        field = np.fromstring(data_string[strt_offset:end_offset], np.int16)
+        field = np.fromstring(data_string[strt_offset:end_offset], dtype)
         if sys.byteorder == 'little':
             field = field.byteswap()
 
