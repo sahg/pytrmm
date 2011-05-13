@@ -46,8 +46,22 @@ class TRMM3B4XRTFile:
             key, val = item.split('=')
             self._hdr[key] = val
 
-    def read_field(self, field_num):
-        """Read a data field from the file.
+    def _read_scaled_masked_field(self, field_num, dtype=np.float32):
+        """Return a scaled and masked data field.
+
+        """
+        scale_factor = float(hdr['variable_scale'].split(',')[field_num])
+
+        raw_field = self.read_raw_field(field_num)
+
+        field = np.ma.masked_equal(raw_field, int(self._hdr['flag_value']))
+        field = np.ma.asarray(field, dtype)
+        field /= scale_factor
+
+        return field
+
+    def read_raw_field(self, field_num):
+        """Read a raw data field from the file.
 
         Reads the requested field from file if possible. The returned
         field is unscaled and unmasked integer data.
@@ -121,22 +135,39 @@ class TRMM3B42RTFile(TRMM3B4XRTFile):
     >>> print('Data std-dev:', precip.std())
 
     """
-    def precip(self, scaled=True, floats=True, masked=True):
-        """Return the entire field of rainfall values.
+    def precip(self):
+        """Return the field of precipitation values.
 
-        The data are returned as a 2D Numpy array.
+        The scaled data are in mm/hr and returned as a 2D masked Numpy
+        array. Invalid data are masked out.
 
         """
-        precip_scale_factor = 100.0
+        return self._read_scaled_masked_field(0)
 
-        raw_field = self.read_field(0)
+    def precip_error(self):
+        """Return the field of precipitation RMS error estimates.
 
-        if masked:
-            precip = np.ma.masked_equal(raw_field,
-                                        int(self._hdr['flag_value']))
-        if floats:
-            precip = np.ma.asarray(precip, np.float32)
-        if scaled:
-            precip /= precip_scale_factor
+        The scaled data are in mm/hr and returned as a 2D masked Numpy
+        array. Invalid data are masked out.
 
-        return precip
+        """
+        return self._read_scaled_masked_field(1)
+
+    def source(self):
+        """Return the field of data source identifiers.
+
+        The integer data are returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(2, dtype=np.int8)
+
+    def uncalibrated_precip(self):
+        """Return the field of uncalibrated precipitation values.
+
+        The scaled data are in mm/hr and returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(3)
+
