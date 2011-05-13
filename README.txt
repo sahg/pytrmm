@@ -37,3 +37,12 @@ Usage Example
     >>> print('Data min:', precip.min())
     >>> print('Data mean:', precip.mean())
     >>> print('Data std-dev:', precip.std())
+
+Contributions an bug reports
+----------------------------
+
+If you have improvements to make to PyTRMM, or find a bug, we'd love
+to hear about it. Please create an issue at
+https://github.com/sahg/pytrmm/issues (currently requires a free
+Github account). Alternatively make use of the PyTOPKAPI mailing list
+(see http://sahg.github.com/PyTOPKAPI/contact.html).
