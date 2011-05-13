@@ -46,8 +46,21 @@ class TRMM3B4XRTFile:
             key, val = item.split('=')
             self._hdr[key] = val
 
-    def _read_field(self, field_num):
+    def read_field(self, field_num):
         """Read a data field from the file.
+
+        Reads the requested field from file if possible. The returned
+        field is unscaled and unmasked integer data.
+
+        Parameters
+        ----------
+        field_num : int
+            The zero-indexed field number to read.
+
+        Returns
+        -------
+        field : Numpy ndarray
+            The unprocessed integer data contained in the file.
 
         """
         dtype_list = self._hdr['variable_type'].split(',')
