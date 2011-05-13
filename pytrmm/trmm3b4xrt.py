@@ -51,7 +51,7 @@ class TRMM3B4XRTFile(object):
         """Return a scaled and masked data field.
 
         """
-        scale_factor = float(hdr['variable_scale'].split(',')[field_num])
+        scale_factor = float(self._hdr['variable_scale'].split(',')[field_num])
 
         raw_field = self.read_raw_field(field_num)
 
