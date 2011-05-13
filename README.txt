@@ -38,8 +38,8 @@ Usage Example
     >>> print('Data mean:', precip.mean())
     >>> print('Data std-dev:', precip.std())
 
-Contributions an bug reports
-----------------------------
+Contributions and bug reports
+-----------------------------
 
 If you have improvements to make to PyTRMM, or find a bug, we'd love
 to hear about it. Please create an issue at
