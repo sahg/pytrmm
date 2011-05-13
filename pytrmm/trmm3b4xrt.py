@@ -52,11 +52,20 @@ class TRMM3B4XRTFile:
         """
         data_string = self._read_binary()
 
-        if field_num == 0:
+        dtype_list = self._hdr['variable_type'].split(',')
+        dtype_list = [int(s[-1]) for s in dtype_list]
+
+        nfields = int(self._hdr['number_of_variables'])
+
+        if field_num in range(nfields):
             strt_offset = self._header_offset
+            k = field_num - 1
+            while k >= 0:
+                strt_offset += dtype_list[k]*self._rows*self._cols
+                k = k-1
         else:
-            raise NotImplementedError(
-                'Reading field number %d not implemented yet' % field_num)
+            raise IOError("Can't read field number %d. File %s only contains %d fields, and fields are indexed from 0." \
+                          % (field_num, self.filename, nfields))
 
         var_type = self._hdr['variable_type'].split(',')[field_num]
 
