@@ -17,7 +17,7 @@ Install
 -------
 
 The PyTRMM package currently consists of pure Python code and does not
-require any extension modules to be built. However the model depends
+require any extension modules to be built. However the package depends
 on NumPy (http://www.numpy.org).
 
 Once the Numpy has been been successfully installed, PyTRMM can be
