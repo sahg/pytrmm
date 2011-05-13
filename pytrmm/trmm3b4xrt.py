@@ -6,7 +6,7 @@ from gzip import GzipFile
 import numpy as np
 from numpy import ma
 
-class TRMM3B4XRTFile:
+class TRMM3B4XRTFile(object):
     """Base Class for read operations on TRMM 3B4XRT files.
 
     This class should not be used directly, use one of the derived
