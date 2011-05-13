@@ -50,8 +50,6 @@ class TRMM3B4XRTFile:
         """Read a data field from the file.
 
         """
-        data_string = self._read_binary()
-
         dtype_list = self._hdr['variable_type'].split(',')
         dtype_list = [int(s[-1]) for s in dtype_list]
 
@@ -77,6 +75,8 @@ class TRMM3B4XRTFile:
             end_offset = strt_offset + 2*self._rows*self._cols
         else:
             raise IOError, 'Badly formed header in %s' % self.filename
+
+        data_string = self._read_binary()
 
         field = np.fromstring(data_string[strt_offset:end_offset], dtype)
         if sys.byteorder == 'little':
