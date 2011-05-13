@@ -114,11 +114,11 @@ class TRMM3B42RTFile(TRMM3B4XRTFile):
     >>> trmm_file = TRMM3B42RTFile(file_name)
     >>> print(trmm_file.header())
     >>> precip = trmm_file.precip()
-    >>> print 'Array dimensions:', precip.shape
-    >>> print 'Data max:', precip.max()
-    >>> print 'Data min:', precip.min()
-    >>> print 'Data mean:', precip.mean()
-    >>> print 'Data std-dev:', precip.std()
+    >>> print('Array dimensions:', precip.shape)
+    >>> print('Data max:', precip.max())
+    >>> print('Data min:', precip.min())
+    >>> print('Data mean:', precip.mean())
+    >>> print('Data std-dev:', precip.std())
 
     """
     def precip(self, scaled=True, floats=True, masked=True):
