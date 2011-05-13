@@ -129,7 +129,7 @@ class TRMM3B42RTFile(TRMM3B4XRTFile):
         """
         precip_scale_factor = 100.0
 
-        raw_field = self._read_field(0)
+        raw_field = self.read_field(0)
 
         if masked:
             precip = np.ma.masked_equal(raw_field,
