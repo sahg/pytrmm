@@ -1,4 +1,4 @@
-__all__ = ['TRMM3B42RTFile']
+__all__ = ['TRMM3B40RTFile', 'TRMM3B42RTFile']
 
 import sys
 import warnings
@@ -120,6 +120,90 @@ class TRMM3B4XRTFile(object):
         """
         return dict(self._hdr)
 
+class TRMM3B40RTFile(TRMM3B4XRTFile):
+    """Class for read operations on TRMM 3B40RT files.
+
+    Example Usage:
+
+    >>> from pytrmm import TRMM3B40RTFile
+    >>> trmm_file = TRMM3B40RTFile(file_name)
+    >>> print(trmm_file.header())
+    >>> precip = trmm_file.precip()
+    >>> print('Array dimensions:', precip.shape)
+    >>> print('Data max:', precip.max())
+    >>> print('Data min:', precip.min())
+    >>> print('Data mean:', precip.mean())
+    >>> print('Data std-dev:', precip.std())
+
+    """
+    def __init__(self, filename):
+        TRMM3B4XRTFile.__init__(self, filename)
+
+        if self._hdr['algorithm_ID'] != '3B40RT':
+            algo_warning = """\
+The file %s is apparently not a 3B40RT file.
+Reported algorithm ID is %s. Try using pytrmm.TRMM%sFile instead.
+"""
+            algo_warning = algo_warning % (self.filename,
+                                           self._hdr['algorithm_ID'],
+                                           self._hdr['algorithm_ID'])
+
+            warnings.warn(algo_warning)
+
+    def precip(self):
+        """Return the field of precipitation values.
+
+        The scaled data are in mm/hr and returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(0)
+
+    def precip_error(self):
+        """Return the field of precipitation RMS error estimates.
+
+        The scaled data are in mm/hr and returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(1)
+
+    def total_pixels(self):
+        """Return the field of total pixels.
+
+        The integer data are returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(2, dtype=np.int8)
+
+    def ambiguous_pixels(self):
+        """Return the field of ambiguous pixels.
+
+        The integer data are returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(3, dtype=np.int8)
+
+    def rain_pixels(self):
+        """Return the field of rain pixels.
+
+        The integer data are returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(4, dtype=np.int8)
+
+    def source(self):
+        """Return the field of data source identifiers.
+
+        The integer data are returned as a 2D masked Numpy
+        array. Invalid data are masked out.
+
+        """
+        return self._read_scaled_masked_field(5, dtype=np.int8)
+
 class TRMM3B42RTFile(TRMM3B4XRTFile):
     """Class for read operations on TRMM 3B42RT files.
 
@@ -185,4 +269,3 @@ Reported algorithm ID is %s. Try using pytrmm.TRMM%sFile instead.
 
         """
         return self._read_scaled_masked_field(3)
-
