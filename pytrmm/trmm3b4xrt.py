@@ -1,6 +1,7 @@
 __all__ = ['TRMM3B42RTFile']
 
 import sys
+import warnings
 from gzip import GzipFile
 
 import numpy as np
@@ -135,6 +136,20 @@ class TRMM3B42RTFile(TRMM3B4XRTFile):
     >>> print('Data std-dev:', precip.std())
 
     """
+    def __init__(self, filename):
+        TRMM3B4XRTFile.__init__(self, filename)
+
+        if self._hdr['algorithm_ID'] != '3B42RT':
+            algo_warning = """\
+The file %s is apparently not a 3B42RT file.
+Reported algorithm ID is %s. Try using pytrmm.TRMM%sFile instead.
+"""
+            algo_warning = algo_warning % (self.filename,
+                                           self._hdr['algorithm_ID'],
+                                           self._hdr['algorithm_ID'])
+
+            warnings.warn(algo_warning)
+
     def precip(self):
         """Return the field of precipitation values.
 
