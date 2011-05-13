@@ -25,6 +25,15 @@ installed at the command line for any operating system:
 
     $ python setup.py install
 
-The installation can be tested in the Python interpreter:
+Usage Example
+-------------
 
-    >>> import pytrmm
+    >>> from pytrmm import TRMM3B42RTFile
+    >>> trmm_file = TRMM3B42RTFile(file_name)
+    >>> print(trmm_file.header())
+    >>> precip = trmm_file.precip()
+    >>> print('Array dimensions:', precip.shape)
+    >>> print('Data max:', precip.max())
+    >>> print('Data min:', precip.min())
+    >>> print('Data mean:', precip.mean())
+    >>> print('Data std-dev:', precip.std())
