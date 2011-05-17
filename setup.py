@@ -10,7 +10,7 @@ from distutils.core import setup
 MAJOR               = 0
 MINOR               = 1
 MICRO               = 0
-ISRELEASED          = False
+ISRELEASED          = True
 VERSION             = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 dev_version_py = 'pytrmm/__dev_version.py'
