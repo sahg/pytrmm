@@ -11,7 +11,8 @@ useful for reading other data provided by TRMM.
 Download
 --------
 
-Source code can be obtained at http://github.com/sahg/pytrmm
+Source code can be obtained at http://github.com/sahg/pytrmm and PyPI
+http://pypi.python.org/pypi/pytrmm/
 
 Install
 -------

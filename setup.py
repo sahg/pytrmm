@@ -8,7 +8,7 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 from distutils.core import setup
 
 MAJOR               = 0
-MINOR               = 1
+MINOR               = 2
 MICRO               = 0
 ISRELEASED          = True
 VERSION             = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
