@@ -40,10 +40,16 @@ class TRMM3B4XRTFile(object):
         """Read the file header.
 
         """
-        data_string = self._read_binary()
+        # Read the header as a textfile
+        if self.filename.split('.')[-1] == 'gz':
+            fp = GzipFile(self.filename)
+        else: # assume decompressed file
+            fp = open(self.filename, 'r')
+        data_string = fp.read(self._header_offset).decode('ascii')
+        fp.close()
 
         self._hdr = {}
-        for item in data_string[:self._header_offset].split():
+        for item in data_string.split():
             key, val = item.split('=')
             self._hdr[key] = val
 
