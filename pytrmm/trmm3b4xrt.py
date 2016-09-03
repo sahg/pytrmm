@@ -102,7 +102,7 @@ class TRMM3B4XRTFile(object):
             dtype = np.int16
             end_offset = strt_offset + 2*self._rows*self._cols
         else:
-            raise IOError, 'Badly formed header in %s' % self.filename
+            raise IOError('Badly formed header in %s' % self.filename)
 
         data_string = self._read_binary()
 
